@@ -9,7 +9,7 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
-    "vue": "^3.2.13"
+    "vue": "^3.3.5"
   },
   "devDependencies": {
     "@vue/cli-service": "~5.0.0"
