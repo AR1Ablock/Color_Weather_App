@@ -1,525 +1,670 @@
-body {
+/* ===== RESET & BASE ===== */
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #596579 #0b0d12;
+}
+
+html::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background: #0b0d12;
+}
+
+html::-webkit-scrollbar-thumb {
+    background: #4c5d75;
+    border-radius: 10px;
+    border: 2px solid #0b0d12;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: #6d86aa;
+}
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     background-color: black;
     color: white;
-    overflow-x: hidden;
+    min-height: 100vh;
+    line-height: 1.4;
 }
 
-.loading {
-    z-index: 99;
-    width: 100vw;
-    height: 100vh;
-    background: #000000f4;
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* ===== LOADING OVERLAYS ===== */
+.loading_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0);
     display: flex;
+    /* hidden by default */
     align-items: center;
     justify-content: center;
-    display: none;
-    position: fixed;
-    overflow: hidden;
 }
 
-.loading2 {
-    z-index: 99;
-    display: none;
-    position: absolute;
-    top: 10vmin;
-    overflow: hidden;
-}
+/* ===== LOADING SPINNER ===== */
 
-.LoadingCompleted {
+.loading_container {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    gap: 1rem;
 }
 
 .loadingdiv {
-    height: 5vmin;
-    border-top: 5px solid #ff5e00;
-    border-bottom: 5px solid #41ff00;
-    border-right: 5px solid #00c3ff;
-    border-left: 5px solid #ff0030;
-    width: 5vmin;
+    box-sizing: border-box;
+    border-top-color: #fdd300 !important;
+    border-right-color: #ffdd00 !important;
     border-radius: 50%;
-    animation: loading linear infinite 1s;
+    animation: loading 0.75s linear infinite;
 }
+
 
 @keyframes loading {
-    from {
-        transform: rotate(0deg);
-    }
-
     to {
-        transform: rotate(360deg);
+        transform: rotate(1turn);
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .loadingdiv {
+        animation-duration: 1.8s;
+    }
+}
+
+
+.overlay_loadingdiv_size {
+    --loader-size: clamp(2rem, 5vw, 3.5rem);
+    --loader-width: clamp(0.25rem, 0.7vw, 0.42rem);
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border: var(--loader-width) solid rgb(255 255 255 / 28%);
+}
+
+
+.search_btn_loadingdiv_size {
+    width: clamp(.9rem, 2.5vw, 1.15rem);
+    height: clamp(.9rem, 2.5vw, 1.15rem);
+    border: .3rem solid rgb(255 255 255 / 28%);
+}
+
+.location_btn_loadingdiv_size{
+    width: clamp(1rem, 2.5vw, 2rem);
+    height: clamp(1rem, 2.5vw, 2rem);
+    border: .3rem solid rgb(255 255 255 / 28%);
+
+}
+
+/* ===== CONTAINER & VIDEO ===== */
+.container {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    /* video, then wrapper */
+    min-height: 100vh;
+}
+
+.hero_section {
+    position: relative;
+    overflow: hidden;
+}
+
+
+.bgvideo {
+    grid-row: 1;
+    width: 100%;
+    height: clamp(50vh, 55vh, 60vh);
+    object-fit: cover;
+    display: block;
+    border-bottom-left-radius: .5rem;
+    border-bottom-right-radius: .5rem;
+}
+
+/* ===== TOP BAR (START) ===== */
 .start {
-    width: 90%;
+    position: absolute;
+    top: 1rem;
+    left: 0;
+    right: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-left: 5%;
-    position: absolute;
-    top: 0;
-    font-family: sans-serif;
+    padding: 0 clamp(1rem, 4vw, 3rem);
+    gap: 1rem;
 }
 
 .cityname {
     color: #484848;
-}
-
-.start p {
-    font-size: 5vmin;
+    font-size: clamp(1rem, 4vw, 1.8rem);
     font-weight: bold;
-    margin: 1vmin 0;
     display: flex;
     align-items: center;
+    gap: 0.3em;
 }
 
-.start p img {
-    transform: translateY(.5vmin);
-    width: 5vmin;
+.cityname img {
+    width: 1.2em;
+    height: auto;
+    vertical-align: middle;
 }
 
-.start h1 {
-    font-size: 4vmin;
-    color: rgb(255, 255, 255);
-}
-
-.inputSearchCntrylistCon {
+.input_Search_Country_list_Container {
+    position: relative;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    width: clamp(7rem, 20vw, 12rem);
 }
 
-.start .SearchInput {
+.SearchInput {
     border: none;
     outline: none;
-    padding: .9vmin;
-    border-radius: 2vmin;
-    color: blueviolet;
+    padding: 0.4em 0.8em;
+    border-radius: 2em;
+    color: rgb(56, 56, 56);
     font-weight: bold;
-    font-size: 2vmin;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    width: 70%;
 }
 
-.showhide {
-    background: #ffffffcf;
-    color: black;
-    border-radius: 2vmin;
-    overflow: hidden;
-    position: absolute;
-    min-width: 40.8vmin;
-    z-index: 9 !important;
-    transform: translateY(4.5vmin);
-}
-
-.locationslist {
-    border-bottom: 2px solid aqua;
+.SearchBtn,
+.LocationBtn {
+    border: none;
+    outline: none;
+    font-weight: bold;
+    background-color: rgb(255, 132, 0);
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: .5vmin 1vmin;
-}
-
-.locationslist:hover {
-    background-color: #00c3ff;
-    transform: scale(1.05);
-    transition-timing-function: linear;
-    transition: all .3s;
-}
-
-.hoveredItem {
-    background-color: #00c3ff;
-    transform: scale(1.05);
-    transition-timing-function: linear;
-    transition: all .3s;
-}
-
-.locationslist p {
-    font-size: 2.6vmin !important;
-    font-family: sans-serif;
 }
 
 .SearchBtn {
-    padding: .8vmin 2vmin;
-    border: none;
-    outline: none;
-    font-size: 2vmin;
-    font-weight: bold;
-    border-radius: 5vmin;
-    margin-left: 1vmin;
-    background-color: rgb(255, 132, 0);
-    color: white;
+    padding: 0.4em;
+    border-radius: 2em;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+    width: 30%;
+}
+
+
+.SearchBtn svg {
+    width: clamp(.9rem, 2.5vw, 1.15rem);
+    height: clamp(.9rem, 2.5vw, 1.15rem);
+    display: block;
 }
 
 .LocationBtn {
-    padding: .8vmin 1vmin .3vmin .8vmin;
-    font-size: 5vmin;
-    font-family: sans-serif;
-    font-weight: bolder;
-    border: none;
-    outline: none;
-    background-color: rgb(255, 132, 0);
-    color: white;
-    border-radius: 20vmin;
-    transform: translateY(.5vmin);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    padding: .5rem .5rem;
+    border-radius: 50%;
+    line-height: 1;
 }
 
 .SearchBtn:hover,
 .LocationBtn:hover {
     background-color: rgb(255, 172, 84);
-    transition-timing-function: ease-in-out;
-    transition: all .3s;
 }
 
-.SearchBtn:active,
 .LocationBtn:active {
-    background-color: rgb(255, 172, 84);
-    transform: scale(.8);
-    transition-timing-function: ease-in-out;
-    transition: all .5s;
+    transform: scale(.9);
 }
 
-.bgvideo {
-    height: 60vh;
-    width: 100%;
-    position: relative;
-    object-fit: cover;
+.SearchBtn:active {
+    transform: translateX(-10px);
 }
 
+/* Dropdown list */
+.showhide {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.9);
+    color: black;
+    border-radius: 1rem;
+    overflow: hidden;
+    z-index: 11;
+    margin-top: 0.4rem;
+    box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.3);
+}
+
+.locationslist {
+    padding: 0.6em 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid aqua;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.locationslist:hover {
+    background-color: #00c3ff;
+    transform: scale(1.02);
+}
+
+.hoveredItem {
+    background-color: #00c3ff;
+    transform: scale(1.02);
+}
+
+.locationslist p {
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    font-weight: 600;
+    color: #111;
+}
+
+/* ===== WEATHER DETAILS (OVERLAY ON VIDEO) ===== */
 .weatherDetails {
-    position: relative;
-    font-family: sans-serif;
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    bottom: 30vmin;
-    gap: 5vmin;
-    left: 2vmin;
-    height: 0;
+    position: absolute;
+    bottom: clamp(.5rem, 2vw, 1rem);
+    left: clamp(1rem, 4vw, 3rem);
+    right: clamp(1rem, 4vw, 3rem);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: clamp(1rem, 3vw, 3rem);
 }
-
-.Date {
-    display: none;
-}
-
 
 .bgtemp {
-    position: relative;
-    font-size: 8vmin;
+    font-size: clamp(2.5rem, 8vw, 5rem);
     font-weight: bold;
     font-style: italic;
+    line-height: 1;
 }
 
 .bgcondition {
-    position: relative;
-    font-size: 4.5vmin;
+    font-size: clamp(1.2rem, 4vw, 2rem);
     font-style: italic;
-    right: 3vmin;
+    opacity: 0.9;
 }
 
 .hourlytime {
     display: flex;
-    gap: 0 2.4vmin;
-    position: relative;
+    gap: clamp(0.4rem, 3vw, 3rem);
+    overflow-x: scroll;
+    scrollbar-width: none;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
 }
 
 .hourlytime div {
     text-align: center;
-    font-size: 2.5vmin;
-    font-family: sans-serif;
-    letter-spacing: .5px;
-    color: #62cff7;
-    /*    color: #00a8ff; */
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
     font-weight: 600;
-    min-width: 11vmin;
-    transform: translateX(-1vmin);
+    color: #62cff7;
+    min-width: 3.5rem;
+    flex-shrink: 0;
 }
 
-.hourlytime * {
-    margin: .3vmin 0;
+.hourlytime .img img {
+    width: clamp(2rem, 5vw, 3rem);
+    margin: 0.2em 0;
 }
 
-.img img {
-    width: 6vmin;
-}
-
+/* ===== MAIN WRAPPER (CONTENT BELOW VIDEO) ===== */
 .wrapper {
-    width: 95vw;
-    /* background-color: rgb(82, 44, 44); */
-    margin: 0 2.5vw;
-    position: relative;
-    bottom: .5vmin;
-    display: flex;
-
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(1.2rem, 3vw, 2rem);
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 4vw, 2rem);
+    width: 100%;
 }
 
+/* ===== SMALL PANEL ===== */
 .smallPanel {
-    /*     background-color: rgb(49, 109, 89); */
-    width: 40vw;
-    margin-left: 1vmin;
-    margin-right: 5vmin;
-    padding: 5vmin 0;
-    text-align: justify;
     display: flex;
     flex-direction: column;
-    text-align: center;
+    gap: clamp(1.2rem, 3vw, 2rem);
 }
 
 .smallPanel_1 {
     background-color: rgb(18, 114, 166);
-    border-radius: 1vmin;
-    padding: 2vmin;
-    height: 40vh;
-    font-family: sans-serif;
+    border-radius: clamp(0.8rem, 2vw, 1.5rem);
+    padding: clamp(1rem, 3vw, 2rem);
+    text-align: center;
+    color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
-
+    gap: 0.6em;
 }
 
-.smallPanel_1 * {
-    margin: .8vmin;
-}
-
-.smallPanel_1 h2 {
-    font-size: 3vmin;
+.temprature {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    border-bottom: #00c3ff 1px solid;
+    padding-bottom: .5rem;
+    margin-bottom: .5rem;
 }
 
 .smallPanel_1 h1 {
-    font-size: 8vmin;
+    font-size: clamp(2.5rem, 8vw, 4rem);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-bottom: solid rgb(255, 255, 255) 2px;
 }
 
-.smallPanel_1 div {
-    margin: 0;
+.current_temp_img_container {
+    width: 4rem;
+    height: auto;
+}
+
+.current_temp_img_container img {
+    width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+.date_location {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 2.3vmin;
+    gap: 0.5em;
+    margin-bottom: 0.5rem;
 }
 
-.smallPanel_1 h1 span img {
-    width: 10vmin;
-    transform: translateY(1vmin);
+
+.Small_Panel_Date_Container,
+.Small_Panel_Location_Container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.3em;
+    font-size: clamp(.8rem, 2vw, 1rem);
+    color: white;
 }
 
-.smallPanel_1 p span img {
-    transform: translateY(2.5vmin);
-    width: 4vmin;
+.date_location_img_container {
+    width: 1rem;
+    height: auto;
+    margin-right: .3rem;
 }
 
+.date_location_img_container img {
+    width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+/* Small Panel Container (Weekly) */
 .SmallPanelHeading {
-    font-family: sans-serif;
-    font-size: 4vmin;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.SmallPanelHeading_inside {
+    display: none;
 }
 
 .smallPanel_2 {
     background-color: chocolate;
-    border-radius: 1vmin;
-    min-height: 40vmin;
-    font-size: 2.4vmin;
-    font-weight: bold;
-    grid-template-rows: repeat(4, 1fr);
-    padding: 1vmin 0;
-    font-family: ui-sans-serif;
+    border-radius: clamp(0.8rem, 2vw, 1.5rem);
+    padding: clamp(0.6rem, 2vw, 1rem) 0;
+}
+
+.weekly_days {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .day {
-    transform: translateY(.7vmin);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    margin: 3vmin 0 !important;
+    text-align: center;
+    margin: clamp(0.3rem, 1vw, .8rem) 0;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    font-weight: bold;
+    font-family: system-ui, sans-serif;
+    width: 80%;
 }
 
-.day h2 {
-    margin: 0;
+.day .rain_chances {
+    width: 2rem;
+}
+
+.day p {
+    font-size: 0.8em;
+    padding: 0 0.2em;
+    color: #fff;
+}
+
+.WeekDate {
+    margin-left: .5rem;
+}
+
+.day .weekly_left {
     display: flex;
-    font-size: 3vmin;
-    font-family: sans-serif;
-    margin-left: 4vmin !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(0.4rem, 2vw, 2rem);
 }
 
-.day h2 * {
-    margin: 0 .2vmin !important;
-}
-
-.day h2 p {
-    font-size: 1.8vmin;
-    padding: 0 .2vmin;
-}
-
-.day h2 span img {
-    width: 4vmin;
+.day .weather_icon_container {
+    width: 1.4rem;
     height: auto;
-    transform: translateY(-.5vmin);
 }
 
-.smallPanel_2 div,
-.smallPanel_2 h2,
-.smallPanel_2 h2 *,
-.smallPanel_2 p {
-    margin: 0;
+.day .weather_icon_container img {
+    width: 100%;
+    height: auto;
+    vertical-align: middle;
 }
 
-/* 2nd Panel */
+/* ===== SECOND BIG PANEL ===== */
+.SecondLastBigPanel {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.2rem, 3vw, 2rem);
+}
 
 .BigPanelHeading {
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
     text-align: center;
-    font-family: sans-serif;
-    font-size: 5vmin;
+    font-weight: bold;
 }
 
-.SecondLastBigPanel {
-    width: 50vw;
-    /*   background-color: rebeccapurple; */
-}
-
-
-/*  ................... */
+/* ===== HIGHLIGHTS GRID ===== */
 .Wind_Sun_Humi_Pressure {
     display: grid;
-    gap: 5vmin;
-    grid-template-columns: repeat(2, 1fr);
-    font-family: sans-serif;
+    gap: clamp(0.8rem, 2vw, 1.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    font-family: system-ui, sans-serif;
     text-align: center;
 }
 
 .Wind_Sun_Humi_Pressure p {
-    font-size: 2.2vmin;
-    margin: 1vmin;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    margin: 0.3em 0;
     font-weight: bold;
 }
 
 .Wind_Sun_Humi_Pressure h1 {
-    font-size: 3.5vmin;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
 }
 
+/* Piece 1 – Air Quality */
 .WHSP_Parts_1 {
     background-color: goldenrod;
-    height: 20vh;
-    text-align: center;
-    padding: 2.2vmin 1vmin;
-    border-radius: 2vmin;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(0.8rem, 2vw, 1.5rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
+    gap: 0.8em;
+}
+
+.AQI_Units {
+    margin: 0 .5rem;
 }
 
 .airindex {
     display: flex;
     justify-content: space-around;
-    font-size: 2.4vmin;
+    align-items: center;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     font-weight: 600;
 }
 
 .airindex .good {
-    background-color: rgb(0 223 57);
-    padding: .5vmin 1vmin;
-    border-radius: 5vmin;
-    height: 3vmin;
-    transform: translateY(-.8vmin);
+    background-color: rgb(0, 223, 57);
+    padding: 0.2em 0.4em;
+    border-radius: 3em;
+    font-size: 0.9em;
 }
 
 .airindex_info {
     display: flex;
     justify-content: space-around;
+    align-items: center;
+}
+
+.airindex_info span img {
+    width: clamp(2.5rem, 6vw, 4rem);
+    transform: rotate(90deg);
 }
 
 .airindex_info h1 {
-    font-size: 3vmin;
-    margin: 0 .5vmin;
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
     cursor: pointer;
 }
 
 .airindex_info h1 span {
-    font-size: 2vmin;
-    margin: 0 0.3vmin;
+    font-size: 0.8em;
+    margin-left: 0.2em;
 }
 
-.airindex_info span img {
-    width: 8vmin;
-    transform: translateY(-1vmin) rotate(90deg);
-}
-
+/* Piece 2 – SunRise/SunSet */
 .WHSP_Parts_2 {
     background-color: darkblue;
-    height: 20vh;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    padding: 2.5vmin 1vmin;
-    border-radius: 2vmin;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(0.8rem, 2vw, 1.5rem);
+    display: flex;
     align-items: center;
+    justify-content: space-around;
+}
+
+.SunRise,
+.SunSet {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+}
+
+.SunRise h1,
+.SunSet h1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .8rem;
 }
 
 .WHSP_Parts_2 img {
-    width: 7vmin;
-    transform: translateY(1.5vmin);
-    margin: 0 1vmin;
+    width: clamp(2rem, 5vw, 3rem);
+    margin-right: 0.4em;
+    vertical-align: middle;
 }
 
+/* Pieces 3 & 4 (general) */
 .WHSP_Parts {
     display: flex;
-    height: 20vh;
     align-items: center;
     justify-content: space-around;
     background-color: coral;
-    padding: 1.5vmin 2vmin;
-    border-radius: 2vmin;
-    gap: .9vmin;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(0.8rem, 2vw, 1.5rem);
+    gap: 1em;
 }
 
 .WHSP_Parts img {
-    width: 5vmin;
-    transform: translateY(1.5vmin);
+    width: clamp(1.5rem, 4vw, 2.5rem);
+    vertical-align: middle;
+    margin-right: 0.2em;
 }
 
+/* Piece 4 override background */
+.WHSP_Parts[style*="background-color: cornflowerblue"] {
+    background-color: cornflowerblue !important;
+}
+
+/* ===== WIND SPEED SECTION ===== */
 .TimesHeading {
-    text-align: start;
-    font-size: 4.5vmin;
-    margin: 2vmin 0;
-    font-family: sans-serif;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: bold;
     text-align: center;
+    margin: clamp(1rem, 2vw, 1.5rem) 0 0.5rem;
 }
 
 .times {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    font-size: 2.6vmin;
-    font-family: sans-serif;
-    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .timesPart3 {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    margin: .5vmin;
+    grid-template-columns: repeat(auto-fit, minmax(min(6rem, 100%), 1fr));
+    gap: clamp(0.6rem, 2vw, 1rem);
 }
 
-.timesPart3 img {
-    width: 5vmin;
-}
-
-.timesPart3 .windDiv {
-    text-align: center;
+.windDiv {
     background-color: lightseagreen;
-    border-radius: 2vmin;
-    margin: 0 10%;
-    width: 90%;
+    border-radius: clamp(0.6rem, 1.5vw, 1rem);
+    padding: 0.8em 0.4em;
+    text-align: center;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    font-weight: bold;
 }
 
-.timesPart3 .windDiv p {
-    font-size: 2.6vmin;
-    overflow-x: auto;
+.windDiv img {
+    width: clamp(2rem, 5vw, 3rem);
+    margin: 0.3em auto;
 }
 
-.windDiv p::-webkit-scrollbar {
-    display: none;
-}
-
-/* Toogle Class */
+/* ===== COLOR UTILITY CLASSES ===== */
 .Great {
     background-color: rgb(0, 149, 255) !important;
 }
@@ -544,286 +689,387 @@ body {
     background-color: rgb(255, 0, 0) !important;
 }
 
-@media (min-width: 1250px) {
-    .good {
-        height: 2.8vmin !important;
-    }
+/* ===== RESPONSIVE BREAKPOINTS ===== */
 
-    .airindex_info span img {
-        width: 8vmin;
-        transform: translateX(1vmin) translateY(-1vmin) rotate(90deg);
+
+@media (max-width:500px) {
+    .cityname {
+        max-width: 30%;
     }
 }
 
 
-@media (max-width: 1250px) {
-
-    .Date {
+@media (min-width:500px) AND (max-width:700px) {
+    .WeekDay {
         display: none;
     }
 
-    .airindex_info span img {
-        position: relative;
-        left: 20%;
-        transform: rotate(0) translateY(-1vmin);
-    }
-
-    .times {
-        grid-template-columns: repeat(1, 1fr);
-        position: relative;
-        top: 1%;
-        right: 59vmin;
-    }
-
-    .times div {
-        width: 17vmin;
-    }
-
-    .TimesHeading {
-        position: relative;
-        right: 10%;
-        top: 1%;
-        right: 23vmin;
-    }
-
-
-    .Wind_Sun_Humi_Pressure {
-        display: block;
-    }
-
-    .WHSP_Parts_1 {
-        border-radius: 15vmin;
-    }
-
-    .WHSP_Parts_2 {
-        border-radius: 15vmin;
-    }
-
-    .WHSP_Parts {
-        border-radius: 15vmin;
-    }
-
-}
-
-@media (max-width:880px) {
-    .airindex_info span img {
-        width: 7vmin;
+    .WeekDate {
+        margin-left: .8rem;
     }
 }
 
 
-/* @media (min-width:730px) and ((max-width:1000px)) {
-    .day h2 {
-        margin-left: 0 !important;
+@media (min-width:550px) {
+    .WeekDate{
+        white-space: nowrap;
     }
-} */
+}
 
-
-@media (max-width:900px) {
-
-    .bgvideo {
-        height: 50vh;
-    }
-
-    .start {
-        top: 1.5vmin;
-    }
-
-    .SearchInput {
-        height: 4vmin;
-        width: 25vmin;
-        font-size: 2.6vmin;
-    }
-
-    .Date {
-        display: block;
-        font-size: 3vmin;
-        margin: 0;
-    }
-
-    .Date p {
-        margin: 0;
-    }
-
-    .Date img {
-        width: 3vmin;
-    }
-
-    .showhide {
-        transform: translateY(6vmin);
-    }
-
-    .SearchBtn {
-        padding: 1vmin 2vmin;
-        border: none;
-        outline: none;
-        font-size: 2.6vmin;
-    }
-
-    .LocationBtn {
-        padding: .6vmin 1.3vmin .1vmin 1.3vmin;
-        border-radius: 20vmin;
-    }
-
-    .bgtemp {
-        font-size: 12vmin;
-        position: relative;
-        top: 1vmin;
-    }
-
-    .bgcondition {
-        font-size: 6vmin;
-    }
-
-    .hourlytime div {
-        font-size: 2.3vmin;
-    }
-
-    .hourlytime {
-        gap: 0 1.5vmin;
-    }
-
-    .day{
-        margin: 5vmin 0 !important;
-    }
-
-    .day h2 {
-        font-size: 4vmin;
-        margin-left: 5vmin;
-    }
-
-    .day h2 p {
-        font-size: 2.5vmin;
-    }
-
-    .weatherDetails {
-        bottom: 40vmin;
-        gap: 3vmin;
-    }
-
-    .wrapper {
-        display: grid;
-        grid-template-columns: repeat(1, 1fr);
-        text-align: center;
-    }
-
-    .smallPanel {
-        width: auto;
-    }
-
-    .smallPanel_2 {
-        font-size: 4vmin;
-        position: relative;
-        bottom: 8vmin;
-        min-height: auto;
-    }
-
-    .smallPanel_2 .day span img {
-        width: 6vmin;
-    }
-
-    .SecondLastBigPanel {
-        grid-row-start: 1;
-        width: auto;
-    }
-
-    .Wind_Sun_Humi_Pressure {
-        display: grid;
-        gap: 2vmin;
-    }
-
-    .Wind_Sun_Humi_Pressure p {
-        font-size: 3.2vmin;
-    }
-
-    .Wind_Sun_Humi_Pressure h1 {
-        font-size: 3vmin;
-        margin: 0 .3vmin;
-    }
-
-    .WHSP_Parts_1,
-    .WHSP_Parts_2 {
-        border-radius: 2vmin;
-        height: 25vmin;
-    }
-
-    .good {
-        height: 4vmin !important;
-    }
-
-    .smallPanel {
-        display: grid;
-    }
-
-    .Small_Panel_Container {
-        grid-row-start: 1;
-        margin-bottom: 8vmin;
-        position: relative;
-        left: 2vmin;
-    }
-
-    .smallPanel_1 {
-        display: none;
-    }
-
-    .airindex_info span img {
-        transform: translateY(-1vmin) rotate(90deg);
-    }
-
-    .WHSP_Parts {
-        border-radius: 2vmin;
-        height: 25vmin;
-    }
-
-    .WHSP_Parts img {
-        width: 6vmin;
-        transform: translateY(1.5vmin);
-    }
-
-    .times {
-        display: grid;
-        grid-template-columns: repeat(1, 1fr);
-        font-size: 3.5vmin;
-        right: 1.5vmin;
-    }
-
-    .TimesHeading {
-        right: auto;
-    }
+@media (min-width:500px) AND (max-width:1023px) {
 
     .SmallPanelHeading {
-        position: relative;
-        bottom: 6.5vmin;
-        font-size: 5vmin;
+        display: none;
     }
 
+    .SmallPanelHeading_inside {
+        display: block;
+        text-align: center;
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
+        font-weight: bold;
+        margin-bottom: .5rem;
+    }
+
+    .smallPanel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+/* 640px – small tablet */
+@media (min-width: 640px) {
     .timesPart3 {
-        gap: 5vmin;
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .times div {
-        min-width: 24vmin;
+    .Wind_Sun_Humi_Pressure {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 900px – tablet landscape, switch to two columns */
+@media (min-width: 1024px) {
+
+    .wrapper {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .smallPanel_1 {
+        display: flex;
+        /* show now card */
+    }
+
+    /* Reorder inside small panel: weekly first, then now card */
+    .smallPanel {
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 1.5rem;
+    }
+
+    .bgvideo {
+        height: clamp(55vh, 60vh, 65vh);
+    }
+
+    .timesPart3 {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .Wind_Sun_Humi_Pressure {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hourlytime div {
+        font-size: clamp(0.75rem, 1.5vw, 1rem);
+    }
+
+    .wrapper {
+        grid-template-columns:40% 1fr;
+        /* narrow small panel */
+        gap: 2rem;
+    }
+
+    .smallPanel_1 h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    .SmallPanelHeading {
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
+    }
+
+    .day {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+    }
+}
+
+
+
+/* 1440px – extra large screens */
+@media (min-width: 1200px) {
+    .day p {
+        font-size: 1.2rem;
+    }
+
+    .date_location p {
+        font-size: 1.2rem;
+    }
+
+    .smallPanel_1 h2 {
+        font-size: 2rem;
+    }
+}
+
+@media (min-width: 1440px) {
+
+    .bgvideo {
+        height: 60vh;
+    }
+}
+
+/* ===== SCROLLBAR HIDE FOR WIND SPEED (IF OVERFLOW) ===== */
+.windDiv p::-webkit-scrollbar {
+    display: none;
+}
+
+
+
+.loading_container h1 {
+    max-width: 24ch;
+    margin: 0;
+
+    font-size: clamp(1.15rem, 2.5vw, 1.7rem);
+    font-weight: 650;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+}
+
+.loading_container button {
+    min-width: 8rem;
+    padding: 0.75rem 1.35rem;
+
+    border: 0;
+    border-radius: 999px;
+
+    color: #fff;
+    background: linear-gradient(135deg, #ff9a00, #ff7200);
+    box-shadow:
+        0 0.45rem 1rem rgb(255 111 0 / 28%),
+        inset 0 1px 0 rgb(255 255 255 / 22%);
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    transition:
+        transform 160ms ease,
+        filter 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.loading_container button:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+    box-shadow:
+        0 0.65rem 1.25rem rgb(255 111 0 / 38%),
+        inset 0 1px 0 rgb(255 255 255 / 22%);
+}
+
+.loading_container button:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.loading_container button:focus-visible {
+    outline: 3px solid rgb(113 202 255 / 85%);
+    outline-offset: 4px;
+}
+
+
+
+.weather-toast {
+    --toast-accent: #67cfff;
+    --toast-accent-soft: rgb(103 207 255 / 18%);
+    --toast-progress: #67cfff;
+
+    position: fixed;
+    z-index: 9999;
+    top: clamp(1rem, 3vw, 1.75rem);
+    right: clamp(1rem, 3vw, 1.75rem);
+
+    width: min(calc(100vw - 2rem), 25rem);
+    min-height: 4.7rem;
+    padding: 1rem 0.85rem 1rem 1rem;
+
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 2rem;
+    align-items: center;
+    gap: 0.75rem;
+
+    overflow: hidden;
+    color: #f7fbff;
+
+    background: rgb(13 28 52 / 92%);
+    border: 1px solid var(--toast-accent-soft);
+    border-left: 0.3rem solid var(--toast-accent);
+    border-radius: 1rem;
+    box-shadow:
+        0 1rem 2.5rem rgb(0 0 0 / 35%),
+        inset 0 1px 0 rgb(255 255 255 / 8%);
+    backdrop-filter: blur(0.85rem);
+}
+
+.weather-toast--info {
+    --toast-accent: #67cfff;
+    --toast-accent-soft: rgb(103 207 255 / 24%);
+    --toast-progress: #67cfff;
+}
+
+.weather-toast--error {
+    --toast-accent: #ff6d5a;
+    --toast-accent-soft: rgb(255 109 90 / 25%);
+    --toast-progress: #ff795f;
+}
+
+.weather-toast__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+
+    display: grid;
+    place-items: center;
+
+    color: var(--toast-accent);
+    background: var(--toast-accent-soft);
+    border-radius: 50%;
+}
+
+.weather-toast__icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.weather-toast__message {
+    margin: 0;
+
+    font-size: clamp(0.85rem, 1.8vw, 0.96rem);
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.weather-toast__close {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+
+    display: grid;
+    place-items: center;
+
+    color: rgb(255 255 255 / 70%);
+    background: transparent;
+    border: 0;
+    border-radius: 0.55rem;
+    cursor: pointer;
+
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.weather-toast__close:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 10%);
+}
+
+.weather-toast__close:active {
+    transform: scale(0.9);
+}
+
+.weather-toast__close:focus-visible {
+    outline: 2px solid var(--toast-accent);
+    outline-offset: 2px;
+}
+
+.weather-toast__close svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.weather-toast__timer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    height: 0.22rem;
+    background: var(--toast-progress);
+    transform-origin: left;
+    animation: toastTimer 5s linear forwards;
+}
+
+@keyframes toastTimer {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* Vue Transition */
+.toast-enter-active,
+.toast-leave-active {
+    transition:
+        opacity 220ms ease,
+        transform 220ms ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+}
+
+/* Mobile: keep it away from browser edges and readable */
+@media (max-width: 30rem) {
+    .weather-toast {
+        top: 0.8rem;
+        right: 0.75rem;
+        left: 0.75rem;
+
         width: auto;
+        min-height: 4.4rem;
+        padding: 0.85rem 0.65rem 0.85rem 0.8rem;
+
+        grid-template-columns: 2rem minmax(0, 1fr) 1.85rem;
+        gap: 0.6rem;
+
+        border-radius: 0.85rem;
     }
 
-    .times div img {
-        width: 8vmin !important;
+    .weather-toast__icon {
+        width: 2rem;
+        height: 2rem;
     }
 
-    .timesPart3 .windDiv p {
-        font-size: 3.5vmin;
+    .weather-toast__message {
+        font-size: 0.84rem;
     }
 }
 
-@media (max-width: 240px) {
-    .weatherDetails {
-        bottom: 44vmin !important;
+@media (prefers-reduced-motion: reduce) {
+    .weather-toast__timer {
+        animation: none;
     }
-}
 
-@media (max-width: 1250px) and (min-width: 900px) {
-    .times {
-        right: 47vmin;
+    .toast-enter-active,
+    .toast-leave-active {
+        transition: opacity 120ms ease;
+    }
+
+    .toast-enter-from,
+    .toast-leave-to {
+        transform: none;
     }
 }

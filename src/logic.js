@@ -1,16 +1,16 @@
-import { ref } from "vue";
+import { ref, reactive, onBeforeUnmount, onMounted } from "vue";
 
 // Videos
-import Cloudy from './assets/videos/Cloudy.mp4';
-import Stormy from './assets/videos/Storm.mp4';
-import Rainy from './assets/videos/Rain.mp4';
-import Foggy from './assets/videos/Foggy.mp4';
-import Snow from './assets/videos/Snow.mp4';
-import Sunny from './assets/videos/Sunny.mp4';
-import Clear from './assets/videos/Clear.mp4';
-import Overcast from './assets/videos/Overcast.mp4';
-import Night from './assets/videos/Night.mp4';
-import SandDust from './assets/videos/Sand_Dust_storm.mp4';
+const Cloudy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Cloudy.mp4';
+const Stormy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Storm.mp4';
+const Rainy ='https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Rain.mp4';
+const Foggy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Foggy.mp4';
+const Snow ='https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Snow.mp4';
+const Sunny = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Sunny.mp4';
+const Clear = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Clear.mp4';
+const Overcast = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Overcast.mp4';
+const Night = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Night.mp4';
+const SandDust = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Sand_Dust_storm.mp4';
 
 // icons
 import Sunny_ico from './assets/condtions/sunny.png';
@@ -57,6 +57,17 @@ export let MultipleCountries = ref([]);
 let SRSSCT = ref({});
 let weatherRainChances = ref([]);
 let IsCountriesListShowing = ref(false);
+export let Locating_Names = ref(false);
+export let Starting_Overlay = ref(false);
+export let Network_Error = ref(false);
+export let locating = ref(false);
+export const toast = reactive({
+    show: false,
+    message: "",
+    type: "info", // "info" | "error"
+});
+
+let toastTimer = null;
 
 
 // for get things time related things.
@@ -507,8 +518,11 @@ async function GettingHourlyAndWeeklyWeather() {
             }
         }
         setTimeout(() => {
-        document.querySelector('.loading').classList.remove('LoadingCompleted');
-        }, 500);
+            Starting_Overlay.value = false;
+            document.body.style.overflow = "auto";
+            closeNotify();
+            setinput.value = '';
+        }, 1000);
     } catch (error) {
         console.log(error.message);
     }
@@ -568,15 +582,20 @@ async function GettingCurrentFullWeather() {
 
 
 
-
 // function attached with location btn.
 export function GettingCurrentLocation() {
+    if (locating.value) return;
+    if (!navigator.onLine) {
+        Network_Error_Occured();
+        return;
+    }
+    locating.value = true;
+    closeNotify();
     try {
         if ('geolocation' in navigator) {
-            navigator.permissions.query({name:'geolocation'}).then(function(result) {
+            navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
                 if (result.state === 'granted') {
                     // geolocation access is granted
-                    document.querySelector('.LocationBtn').nextElementSibling.classList.add('LoadingCompleted');
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             latitude.value = position.coords.latitude;
@@ -585,40 +604,34 @@ export function GettingCurrentLocation() {
                                 console.log('Current Location\n\n', 'latitude = ', latitude.value, 'longitude = ', longitude.value);
                                 RunAllFUnctions();
                                 ReverseGeoCoding_NamesFromCordLatLon();
-                                document.querySelector('.LocationBtn').nextElementSibling.classList.remove('LoadingCompleted');
+                                locating.value = false;
                             }
-                            else{
-                                document.querySelector('.LocationBtn').nextElementSibling.classList.remove('LoadingCompleted');
-                                setinput.value = 'No Cord Found';
-                                setTimeout(() => {
-                                    setinput.value = '';
-                                }, 500);
+                            else {
+                                locating.value = false;
+                                notify('location Coordinates Not Found', 'info');
                                 return;
                             }
-                        },(error)=> setinput.value = error.message);
+                        }, (error) => notify(error.message, 'error'));
 
                 } else if (result.state === 'prompt') {
-                    setinput.value = 'Asking Permission';
-                    setTimeout(() => {
-                        setinput.value = '';
-                    }, 500);
+                    notify('Ask Location Permission', 'info');
 
                 } else if (result.state === 'denied') {
-                    document.querySelector('.LocationBtn').nextElementSibling.classList.remove('LoadingCompleted');
-                    setinput.value = 'Denied Permission';
-                    setTimeout(() => {
-                        setinput.value = '';
-                    }, 500);
+                    locating.value = false;
+                    notify('location Accessing Permission Denied', 'info');
                     return;
                 }
             });
-            
+
         } else {
             console.log('geolocation not available in this browser');
             return;
         }
     } catch (error) {
         console.log(error.message)
+    }
+    finally {
+        locating.value = false;
     }
 }
 
@@ -634,6 +647,7 @@ async function ReverseGeoCoding_NamesFromCordLatLon() {
         CityLocation.value = data[0].name;
         Province.value = data[0].state;
         Country.value = data[0].country;
+        saveLastLocation({ lat: latitude.value, lon: longitude.value, CountryName: data[0].country, ProvinceName: data[0].state, CityName: data[0].name });
     } catch (error) {
         console.log(error.message);
     }
@@ -653,21 +667,56 @@ export function GettingCoordFromLocations(lat, lon, CountryName, ProvinceName, C
         RunAllFUnctions();
         MultipleCountries.value.splice(0, MultipleCountries.value.length);
         IsCountriesListShowing.value = false;
+        saveLastLocation({ lat, lon, CountryName, ProvinceName, CityName });
+
     } catch (error) {
         console.log(error.message);
     }
 }
 
 
+const LAST_LOCATION_KEY = 'weather_last_location';
 
+function saveLastLocation(location) {
+    try {
+        if (!location || location.lat == null || location.lon == null) return;
+        localStorage.setItem(LAST_LOCATION_KEY, JSON.stringify(location));
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+function loadLastLocation() {
+    try {
+        const saved = localStorage.getItem(LAST_LOCATION_KEY);
+        if (!saved) return null;
+        return JSON.parse(saved);
+    } catch (error) {
+        console.log(error.message);
+        return null;
+    }
+}
 
 // function attached with search btn and enter key. 
+
+let countryKeyListenerAdded = false;
+
 export async function GetName() {
     try {
+        if (Locating_Names.value) return;
+        if (!navigator.onLine) {
+            Network_Error_Occured();
+            return;
+        }
+
+        Locating_Names.value = true;
+        closeNotify();
+
         MultipleCountries.value.splice(0, MultipleCountries.value.length);
+
         let url = `https://api.openweathermap.org/geo/1.0/direct?q=${setinput.value}&limit=5&appid=ca69ed71e3e9415e36b49cc4683189f6`;
+
         if (setinput.value.trim() !== '') {
-            document.querySelector('.loading2').classList.add('LoadingCompleted');
             let rawdata = await fetch(url);
             let data = await rawdata.json();
             if (Array.isArray(data) && data.length > 0) {
@@ -681,39 +730,29 @@ export async function GetName() {
                     }
                     MultipleCountries.value.push(SingleCountryObject);
                 });
-                document.querySelector('.loading2').classList.remove('LoadingCompleted');
+
+                selected.value = 0;
                 IsCountriesListShowing.value = true;
-                window.addEventListener('keydown', SelectCountry);
+
+
+                    window.addEventListener('keydown', SelectCountry);
+
             }
             else {
-                setinput.value = 'Not a Valid Location Name.'
-                document.querySelector('.loading2').classList.remove('LoadingCompleted');
-                setTimeout(() => {
-                    setinput.value = '';
-                }, 1000);
+                notify('Not a valid location name', 'error');
+                Locating_Names.value = false;
             }
+        }
+        else {
+            notify('Enter a location name', 'info');
         }
     }
     catch (error) {
         console.log(error.message);
     }
-}
-
-
-
-// A functionality to hide Shown Countries List when tap on outside the box.
-try {
-    document.addEventListener('click', (event) => {
-        if (IsCountriesListShowing.value) {
-            if (!(document.querySelector('.showhide')).contains(event.target)) {
-                MultipleCountries.value.splice(0, MultipleCountries.value.length);
-                IsCountriesListShowing.value = false;
-                window.removeEventListener('keydown', SelectCountry);
-            }
-        }
-    });
-} catch (error) {
-    console.log(error.message);
+    finally {
+        Locating_Names.value = false;
+    }
 }
 
 
@@ -724,10 +763,12 @@ let justRunOneTime = false;
 function RunAllFUnctions() {
     try {
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('.loading').classList.add('LoadingCompleted');
+            Starting_Overlay.value = true;
+            document.body.style.overflow = "hidden";
         });
         if (justRunOneTime) {
-            document.querySelector('.loading').classList.add('LoadingCompleted');
+            Starting_Overlay.value = true;
+            document.body.style.overflow = "hidden";
         }
         hourlyTempArray.value.splice(0, hourlyTempArray.value.length);
         WeekyDaysTempArray.value.splice(0, WeekyDaysTempArray.value.length);
@@ -745,52 +786,164 @@ function RunAllFUnctions() {
 
 
 // for set a default location when page load.
-function defaultLocation() {
+export function defaultLocation() {
+    if (!navigator.onLine) {
+        Network_Error_Occured();
+        return;
+    }
+    const saved = loadLastLocation();
+    if (saved && saved.lat != null && saved.lon != null) {
+        GettingCoordFromLocations(
+            saved.lat,
+            saved.lon,
+            saved.CountryName,
+            saved.ProvinceName,
+            saved.CityName,
+            0
+        );
+        return;
+    }
+
     GettingCoordFromLocations(30.15, 72.67, 'Pakistan', 'Punjab', 'Burewala', 0);
 }
+
 defaultLocation();
 
+
+window.addEventListener('online', () => {
+    Network_Error.value = false;
+    Starting_Overlay.value = true;
+    document.body.style.overflow = "hidden";
+    defaultLocation();
+});
+
+
+function Network_Error_Occured() {
+    Network_Error.value = true;
+    document.body.style.overflow = "hidden";
+}
+
+
+function closeLocationSuggestions() {
+    MultipleCountries.value.splice(0, MultipleCountries.value.length);
+    IsCountriesListShowing.value = false;
+    selected.value = -1;
+    window.removeEventListener('keydown', SelectCountry);
+}
+
+
+// A functionality to hide Shown Countries List when tap on outside the box.
+try {
+    document.addEventListener('click', (event) => {
+        const suggestions = document.querySelector('.showhide');
+        if (IsCountriesListShowing.value && suggestions && !suggestions.contains(event.target)) {
+            closeLocationSuggestions();
+        }
+    });
+} catch (error) {
+    console.log(error.message);
+}
 
 
 
 window.addEventListener('keydown', (e) => {
-    try {
-        if (e.key == 'Enter' && document.querySelector('.SearchInput') == document.activeElement && !e.shiftKey) {
-            GetName();
+    const searchInput = document.querySelector('.SearchInput');
+    const isSearchFocused = searchInput === document.activeElement;
+
+    if (!isSearchFocused) return;
+
+    if (e.key === 'Delete') {
+        e.preventDefault();
+        setinput.value = '';
+        return;
+    }
+
+    if (IsCountriesListShowing.value) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            SelectCountry(e);
+            return;
         }
-        else if (e.key == 'Delete' && document.querySelector('.SearchInput') == document.activeElement) {
-            setinput.value = '';
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            SelectCountry(e);
+            return;
         }
-    } catch (error) {
-        console.log(error.message)
+    }
+
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        GetName();
     }
 });
 
 
 
-
-// functionality to hover between list of countries and select one by shoft and enter key.
+// functionality to hover between list of countries and select one by enter key.
 export let selected = ref(-1);
+
 let SelectCountry = (e) => {
     try {
-        if (!IsCountriesListShowing)
-            return;
+        if (!IsCountriesListShowing.value) return;
+
         switch (e.key) {
             case 'ArrowUp':
+                e.preventDefault();
                 selected.value = selected.value > 0 ? selected.value - 1 : MultipleCountries.value.length - 1;
                 break;
+
             case 'ArrowDown':
+                e.preventDefault();
                 selected.value = selected.value < MultipleCountries.value.length - 1 ? selected.value + 1 : 0;
                 break;
+
             case 'Enter':
-                if (e.shiftKey) {
-                    let item = MultipleCountries.value[selected.value];
-                    GettingCoordFromLocations(item.lat, item.lon, item.CountryName, item.ProviceName, item.CityName, selected.value);
-                    window.removeEventListener('keydown', SelectCountry);
-                    break;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const index = selected.value >= 0 ? selected.value : 0;
+                const item = MultipleCountries.value[index];
+
+                if (item) {
+                    GettingCoordFromLocations(
+                        item.lat,
+                        item.lon,
+                        item.CountryName,
+                        item.ProviceName,
+                        item.CityName,
+                        index
+                    );
+                } else {
+                    GetName();
                 }
+
+                closeLocationSuggestions();
+                break;
         }
     } catch (error) {
         console.log(error.message);
     }
+}
+
+
+
+export function closeNotify() {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+    toast.show = false;
+}
+
+function notify(message, type = "info") {
+    const allowedTypes = ["info", "error"];
+
+    toast.message = message;
+    toast.type = allowedTypes.includes(type) ? type : "info";
+    toast.show = true;
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        closeNotify();
+    }, 5000);
 }
