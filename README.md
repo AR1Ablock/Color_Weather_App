@@ -37,4 +37,4 @@ This app has some unique features.
 
 
 **Here is a link of deployed app**
-https://new-pj-3b13b.web.app/
+[Color_Weather](https://colour-weather.web.app/)
