@@ -3,9 +3,9 @@ import { ref, reactive, onBeforeUnmount, onMounted } from "vue";
 // Videos
 const Cloudy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Cloudy.mp4';
 const Stormy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Storm.mp4';
-const Rainy ='https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Rain.mp4';
+const Rainy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Rain.mp4';
 const Foggy = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Foggy.mp4';
-const Snow ='https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Snow.mp4';
+const Snow = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Snow.mp4';
 const Sunny = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Sunny.mp4';
 const Clear = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Clear.mp4';
 const Overcast = 'https://github.com/AR1Ablock/weather_media/raw/refs/heads/main/videos/Overcast.mp4';
@@ -413,6 +413,7 @@ function RainChancesPercentage(condition) {
 
 
 
+
 // main function to fetch Hourly  and weekly of 5 days data.
 async function GettingHourlyAndWeeklyWeather() {
     try {
@@ -517,12 +518,6 @@ async function GettingHourlyAndWeeklyWeather() {
                 }
             }
         }
-        setTimeout(() => {
-            Starting_Overlay.value = false;
-            document.body.style.overflow = "auto";
-            closeNotify();
-            setinput.value = '';
-        }, 1000);
     } catch (error) {
         console.log(error.message);
     }
@@ -583,55 +578,110 @@ async function GettingCurrentFullWeather() {
 
 
 // function attached with location btn.
-export function GettingCurrentLocation() {
+export async function GettingCurrentLocation() {
+    // Prevent multiple calls
     if (locating.value) return;
+
     if (!navigator.onLine) {
         Network_Error_Occured();
         return;
     }
+
     locating.value = true;
     closeNotify();
+
     try {
-        if ('geolocation' in navigator) {
-            navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
-                if (result.state === 'granted') {
-                    // geolocation access is granted
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            latitude.value = position.coords.latitude;
-                            longitude.value = position.coords.longitude;
-                            if (latitude.value !== undefined && longitude.value !== undefined) {
-                                console.log('Current Location\n\n', 'latitude = ', latitude.value, 'longitude = ', longitude.value);
-                                RunAllFUnctions();
-                                ReverseGeoCoding_NamesFromCordLatLon();
-                                locating.value = false;
-                            }
-                            else {
-                                locating.value = false;
-                                notify('location Coordinates Not Found', 'info');
-                                return;
-                            }
-                        }, (error) => notify(error.message, 'error'));
-
-                } else if (result.state === 'prompt') {
-                    notify('Ask Location Permission', 'info');
-
-                } else if (result.state === 'denied') {
-                    locating.value = false;
-                    notify('location Accessing Permission Denied', 'info');
-                    return;
-                }
-            });
-
-        } else {
-            console.log('geolocation not available in this browser');
+        // 1. Check if Geolocation is supported
+        if (!('geolocation' in navigator)) {
+            notify('Geolocation is not supported by this browser', 'error');
+            locating.value = false;
             return;
         }
+
+        // 2. Check secure context (required for geolocation)
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            notify('Location access requires a secure connection (HTTPS)', 'error');
+            locating.value = false;
+            return;
+        }
+
+        // 3. Optional: Check current permission state first
+        let permissionState = 'prompt';
+        try {
+            const permission = await navigator.permissions.query({ name: 'geolocation' });
+            permissionState = permission.state;
+
+            if (permissionState === 'denied') {
+                notify('Location permission is denied. Please allow it in browser settings.', 'error');
+                locating.value = false;
+                return;
+            }
+
+            // You can listen for future changes if needed
+            permission.onchange = () => {
+                console.log('Geolocation permission changed:', permission.state);
+            };
+        } catch (permErr) {
+            console.warn('Permissions API not supported, continuing anyway...', permErr);
+        }
+
+        // 4. This is what actually triggers the browser permission prompt
+        navigator.geolocation.getCurrentPosition(
+            // SUCCESS
+            async (position) => {
+                latitude.value = position.coords.latitude;
+                longitude.value = position.coords.longitude;
+
+                console.log('Current Location:', {
+                    latitude: latitude.value,
+                    longitude: longitude.value,
+                    accuracy: position.coords.accuracy
+                });
+
+                await RunAllFUnctions();
+                await ReverseGeoCoding_NamesFromCordLatLon();
+                locating.value = false;
+            },
+            // ERROR
+            (error) => {
+                console.error('Geolocation error:', error);
+                locating.value = false;
+                handleGeolocationError(error);
+            },
+            // OPTIONS - Important for better UX
+            {
+                enableHighAccuracy: true,   // Use GPS if available
+                timeout: 15000,             // 15 seconds
+                maximumAge: 0               // Don't use cached position
+            }
+        );
+
     } catch (error) {
-        console.log(error.message)
-    }
-    finally {
+        console.error('Unexpected error in GettingCurrentLocation:', error);
         locating.value = false;
+        notify('Failed to get location. Please try again.', 'error');
+    }
+}
+
+
+
+
+// Helper function to handle different error types
+function handleGeolocationError(error) {
+    locating.value = false;
+
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            notify('Location permission denied by user', 'error');
+            break;
+        case error.POSITION_UNAVAILABLE:
+            notify('Location information is unavailable', 'error');
+            break;
+        case error.TIMEOUT:
+            notify('Location request timed out. Please try again.', 'error');
+            break;
+        default:
+            notify('An unknown error occurred while getting location', 'error');
     }
 }
 
@@ -657,14 +707,14 @@ async function ReverseGeoCoding_NamesFromCordLatLon() {
 
 
 // function attach with returned multiple locations and get parameters from choosed one.
-export function GettingCoordFromLocations(lat, lon, CountryName, ProvinceName, CityName, Index) {
+export async function GettingCoordFromLocations(lat, lon, CountryName, ProvinceName, CityName, Index) {
     try {
         latitude.value = lat;
         longitude.value = lon;
         CityLocation.value = CityName;
         Country.value = CountryName;
         Province.value = ProvinceName;
-        RunAllFUnctions();
+        await RunAllFUnctions();
         MultipleCountries.value.splice(0, MultipleCountries.value.length);
         IsCountriesListShowing.value = false;
         saveLastLocation({ lat, lon, CountryName, ProvinceName, CityName });
@@ -673,6 +723,8 @@ export function GettingCoordFromLocations(lat, lon, CountryName, ProvinceName, C
         console.log(error.message);
     }
 }
+
+
 
 
 const LAST_LOCATION_KEY = 'weather_last_location';
@@ -686,6 +738,9 @@ function saveLastLocation(location) {
     }
 }
 
+
+
+
 function loadLastLocation() {
     try {
         const saved = localStorage.getItem(LAST_LOCATION_KEY);
@@ -696,6 +751,10 @@ function loadLastLocation() {
         return null;
     }
 }
+
+
+
+
 
 // function attached with search btn and enter key. 
 
@@ -731,11 +790,11 @@ export async function GetName() {
                     MultipleCountries.value.push(SingleCountryObject);
                 });
 
-                selected.value = 0;
+                selected.value = hasPhysicalKeyboard() ? 0 : -1;
                 IsCountriesListShowing.value = true;
 
 
-                    window.addEventListener('keydown', SelectCountry);
+                window.addEventListener('keydown', SelectCountry);
 
             }
             else {
@@ -760,7 +819,7 @@ export async function GetName() {
 
 // main functoin to execute functions.
 let justRunOneTime = false;
-function RunAllFUnctions() {
+async function RunAllFUnctions() {
     try {
         document.addEventListener('DOMContentLoaded', () => {
             Starting_Overlay.value = true;
@@ -773,12 +832,19 @@ function RunAllFUnctions() {
         hourlyTempArray.value.splice(0, hourlyTempArray.value.length);
         WeekyDaysTempArray.value.splice(0, WeekyDaysTempArray.value.length);
         //// functions
-        GettingCurrentFullWeather();
-        GettingHourlyAndWeeklyWeather();
-        GettingCurrentWeatherAirDetails();
+        await GettingCurrentFullWeather();
+        await GettingHourlyAndWeeklyWeather();
+        await GettingCurrentWeatherAirDetails();
         justRunOneTime = true;
     } catch (error) {
         console.log(error.message);
+    } finally {
+        setTimeout(() => {
+            Starting_Overlay.value = false;
+            document.body.style.overflow = "auto";
+            closeNotify();
+            setinput.value = '';
+        }, 1000);
     }
 }
 
@@ -786,14 +852,15 @@ function RunAllFUnctions() {
 
 
 // for set a default location when page load.
-export function defaultLocation() {
+export async function defaultLocation() {
     if (!navigator.onLine) {
         Network_Error_Occured();
         return;
     }
+    Starting_Overlay.value = true;
     const saved = loadLastLocation();
     if (saved && saved.lat != null && saved.lon != null) {
-        GettingCoordFromLocations(
+        await GettingCoordFromLocations(
             saved.lat,
             saved.lon,
             saved.CountryName,
@@ -804,18 +871,20 @@ export function defaultLocation() {
         return;
     }
 
-    GettingCoordFromLocations(30.15, 72.67, 'Pakistan', 'Punjab', 'Burewala', 0);
+    await GettingCoordFromLocations(30.15, 72.67, 'Pakistan', 'Punjab', 'Burewala', 0);
 }
 
-defaultLocation();
+await defaultLocation();
 
 
-window.addEventListener('online', () => {
+
+window.addEventListener('online', async () => {
     Network_Error.value = false;
     Starting_Overlay.value = true;
     document.body.style.overflow = "hidden";
-    defaultLocation();
+    await defaultLocation();
 });
+
 
 
 function Network_Error_Occured() {
@@ -824,12 +893,14 @@ function Network_Error_Occured() {
 }
 
 
+
 function closeLocationSuggestions() {
     MultipleCountries.value.splice(0, MultipleCountries.value.length);
     IsCountriesListShowing.value = false;
     selected.value = -1;
     window.removeEventListener('keydown', SelectCountry);
 }
+
 
 
 // A functionality to hide Shown Countries List when tap on outside the box.
@@ -846,6 +917,7 @@ try {
 
 
 
+
 window.addEventListener('keydown', (e) => {
     const searchInput = document.querySelector('.SearchInput');
     const isSearchFocused = searchInput === document.activeElement;
@@ -858,24 +930,6 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
-    if (IsCountriesListShowing.value) {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            SelectCountry(e);
-            return;
-        }
-
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            SelectCountry(e);
-            return;
-        }
-    }
-
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        GetName();
-    }
 });
 
 
@@ -883,19 +937,19 @@ window.addEventListener('keydown', (e) => {
 // functionality to hover between list of countries and select one by enter key.
 export let selected = ref(-1);
 
-let SelectCountry = (e) => {
+export async function SelectCountry(e) {
     try {
         if (!IsCountriesListShowing.value) return;
 
         switch (e.key) {
             case 'ArrowUp':
                 e.preventDefault();
-                selected.value = selected.value > 0 ? selected.value - 1 : MultipleCountries.value.length - 1;
+                selected.value = selected.value > 0 ? --selected.value : MultipleCountries.value.length - 1;
                 break;
 
             case 'ArrowDown':
                 e.preventDefault();
-                selected.value = selected.value < MultipleCountries.value.length - 1 ? selected.value + 1 : 0;
+                selected.value = selected.value < MultipleCountries.value.length - 1 ? ++selected.value : 0;
                 break;
 
             case 'Enter':
@@ -906,7 +960,7 @@ let SelectCountry = (e) => {
                 const item = MultipleCountries.value[index];
 
                 if (item) {
-                    GettingCoordFromLocations(
+                    await GettingCoordFromLocations(
                         item.lat,
                         item.lon,
                         item.CountryName,
@@ -915,7 +969,7 @@ let SelectCountry = (e) => {
                         index
                     );
                 } else {
-                    GetName();
+                    await GetName();
                 }
 
                 closeLocationSuggestions();
@@ -934,6 +988,8 @@ export function closeNotify() {
     toast.show = false;
 }
 
+
+
 function notify(message, type = "info") {
     const allowedTypes = ["info", "error"];
 
@@ -946,4 +1002,33 @@ function notify(message, type = "info") {
     toastTimer = setTimeout(() => {
         closeNotify();
     }, 5000);
+}
+
+
+
+
+function hasPhysicalKeyboard() {
+    // Method 1: Best general detection (most reliable)
+    const hasHoverAndFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    // Method 2: Check for coarse pointer (typical for touch-only devices)
+    const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+
+    // Method 3: Check if any fine pointer exists (mouse, trackpad, etc.)
+    const hasAnyFinePointer = window.matchMedia('(any-pointer: fine)').matches;
+
+    // Combine logic
+    if (hasHoverAndFinePointer || hasAnyFinePointer) {
+        return true;   // Very likely has physical keyboard (desktop, laptop, tablet with keyboard)
+    }
+
+    if (hasCoarsePointer) {
+        return false;  // Touch-only device (phone, tablet without keyboard)
+    }
+
+    // Fallback: Check screen size + touch capability
+    const isLargeScreen = window.matchMedia('(min-width: 1024px)').matches;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 2;
+
+    return isLargeScreen && !isTouchDevice;
 }

@@ -21,13 +21,14 @@
     <div class="hero_section">
 
 
-      <video autoplay loop muted class="bgvideo" :src="ChangeBackgroundVideo()">
+      <video autoplay oncanplay="this.playbackRate = 0.7;" loop muted class="bgvideo" :src="ChangeBackgroundVideo()">
       </video>
 
       <div class="start">
         <p class="cityname"> <span> <img src="./assets/icons/location.png" alt=""> </span> {{ CityLocation }}</p>
         <div class="input_Search_Country_list_Container">
-          <input type="text" required :disabled="Processing" placeholder="Location..." name="search" class="SearchInput"
+          <input type="text" @keydown.enter="MultipleCountries.length ? SelectCountry() : GetName()" required
+            :disabled="Locating_Names" placeholder="Location..." name="search" class="SearchInput"
             v-model.trim="setinput">
           <div class="showhide" v-if="MultipleCountries">
             <div class="locationslist" :class="{ 'hoveredItem': index == selected }"
@@ -37,8 +38,8 @@
             </div>
           </div>
 
-          <button class="SearchBtn" @click="GetName()" :disabled="Processing">
-            <div v-if="Processing" class="loadingdiv search_btn_loadingdiv_size"></div>
+          <button class="SearchBtn" @click="GetName()" :disabled="Locating_Names">
+            <div v-if="Locating_Names" class="loadingdiv search_btn_loadingdiv_size"></div>
             <span v-else>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none"
                 aria-hidden="true">
@@ -50,8 +51,8 @@
         </div>
 
         <div class="LocationBtnContainer">
-          <button class="LocationBtn" :disabled="Locating_Names" @click="GettingCurrentLocation()">
-            <span v-if="!Locating_Names">⦿</span>
+          <button class="LocationBtn" :disabled="locating" @click.stop="GettingCurrentLocation()">
+            <span v-if="!locating">⦿</span>
             <div v-else class="loadingdiv location_btn_loadingdiv_size"></div>
           </button>
         </div>
@@ -315,5 +316,5 @@
 <script setup>
 import { ref } from 'vue';
 let ShowUnit = ref(false);
-import { setinput, GetName, hourlyTempArray, ChangeImage, CuttentConditionMessage, CuttentFeelsLike, CuttentHumidity, CuttentPressure, CuttentTemp, CuttentVisibility, CuttentWindSpeed, currenDate, currenWeekDay, currenMonth, CityLocation, Province, Country, SunRise, SunSet, WeekyDaysTempArray, AirQuality, AirQualityIndex, AirQualityIndexColor, GettingCurrentLocation, ChangeBackgroundVideo, MultipleCountries, GettingCoordFromLocations, selected, Processing, Starting_Overlay, Network_Error, defaultLocation, toast, closeNotify, Locating_Names } from './logic';
+import { setinput, GetName, hourlyTempArray, ChangeImage, CuttentConditionMessage, CuttentFeelsLike, CuttentHumidity, CuttentPressure, CuttentTemp, CuttentVisibility, CuttentWindSpeed, currenDate, currenWeekDay, currenMonth, CityLocation, Province, Country, SunRise, SunSet, WeekyDaysTempArray, AirQuality, AirQualityIndex, AirQualityIndexColor, GettingCurrentLocation, ChangeBackgroundVideo, MultipleCountries, GettingCoordFromLocations, selected, Starting_Overlay, Network_Error, defaultLocation, toast, closeNotify, Locating_Names, locating, SelectCountry } from './logic';
 </script>
